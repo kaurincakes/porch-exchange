@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Porch Exchange — Garden District</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, update, remove, get }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // ─── SWAP THESE WITH YOUR FIREBASE CONFIG ───────────────────────────────
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpZi6uyy8JrsHfdhzTSSb2LlZz4HlNrSA",
+      authDomain: "porch-exchange-gd.firebaseapp.com",
+      databaseURL: "https://porch-exchange-gd-default-rtdb.firebaseio.com",
+      projectId: "porch-exchange-gd",
+      storageBucket: "porch-exchange-gd.firebasestorage.app",
+      messagingSenderId: "410879402763",
+      appId: "1:410879402763:web:853d1003456240f01d380e"
+    };
+    // ────────────────────────────────────────────────────────────────────────
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ─── RESEND EMAIL CONFIG ─────────────────────────────────────────────────
+    // Drop your Resend API key here after signing up at resend.com
+    const RESEND_API_KEY = "re_ioM3jRcm_EdwnetqXsCAJ94vLLXsEwTaT";
+    const ADMIN_EMAIL    = "harosuki@gmail.com"; // gets report notifications
+    // ────────────────────────────────────────────────────────────────────────
+
+    window._db  = db;
+    window._ref = ref;
+    window._push = push;
+    window._onValue = onValue;
+    window._update = update;
+    window._remove = remove;
+    window._get = get;
+    window._RESEND_KEY = RESEND_API_KEY;
+    window._ADMIN_EMAIL = ADMIN_EMAIL;
+    window._firebaseReady = true;
+    window.dispatchEvent(new Event('firebaseReady'));
+  </script>
+
+  <style>
+    :root {
+      --sand: #f2e8d9;
+      --sand-mid: #eddece;
+      --sand-dark: #dfc9aa;
+      --terracotta: #c4622d;
+      --terracotta-light: #e07a45;
+      --sage: #7a9e7e;
+      --sage-dark: #4f7a54;
+      --prickle: #3d6b41;
+      --prickle-dark: #2d5030;
+      --ink: #2a1f14;
+      --ink-light: #5c4a35;
+      --cream: #faf5ec;
+      --warm-white: #fffdf8;
+      --give-color: #c4622d;
+      --help-color: #4f7a54;
+      --have-color: #7a5c9e;
+      --give-bg: #fdf0e8;
+      --help-bg: #edf4ee;
+      --have-bg: #f3eefb;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--sand);
+      font-family: 'Karla', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 5% 15%, rgba(124,158,127,0.13) 0%, transparent 45%),
+        radial-gradient(ellipse at 95% 85%, rgba(196,98,45,0.09) 0%, transparent 45%);
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    header {
+      background: var(--prickle);
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 14px rgba(42,31,20,0.22);
+    }
+    .header-inner {
+      max-width: 640px; margin: 0 auto;
+      padding: 13px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .cactus { font-size: 26px; line-height: 1; flex-shrink: 0; }
+    .header-text .eyebrow {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--sage); opacity: 0.85;
+      display: block; margin-bottom: 1px;
+    }
+    .header-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 21px; font-weight: 600; color: var(--cream);
+      letter-spacing: -0.01em; line-height: 1.1;
+    }
+    .header-right { display: flex; gap: 8px; align-items: center; }
+    .btn-post {
+      background: var(--terracotta); color: white; border: none;
+      border-radius: 22px; padding: 8px 17px;
+      font-family: 'Karla', sans-serif; font-weight: 700; font-size: 14px;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn-post:hover { background: var(--terracotta-light); transform: translateY(-1px); }
+    .btn-admin {
+      background: rgba(255,255,255,0.1); color: var(--cream);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 7px 11px;
+      font-family: 'Karla', sans-serif; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-admin:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── FILTER BAR ──────────────────────────────────────── */
+    .filter-bar {
+      background: var(--cream);
+      border-bottom: 1px solid var(--sand-dark);
+      position: sticky; top: 57px; z-index: 99;
+    }
+    .filter-inner {
+      max-width: 640px; margin: 0 auto;
+      padding: 9px 16px;
+      display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    }
+    .filter-inner::-webkit-scrollbar { display: none; }
+    .chip {
+      background: transparent; border: 1.5px solid var(--sand-dark);
+      border-radius: 20px; padding: 5px 12px;
+      font-family: 'Karla', sans-serif; font-size: 12.5px; font-weight: 500;
+      color: var(--ink-light); cursor: pointer; white-space: nowrap;
+      transition: all 0.14s; flex-shrink: 0;
+    }
+    .chip:hover { border-color: var(--sage); color: var(--sage-dark); }
+    .chip.active { background: var(--prickle); border-color: var(--prickle); color: white; }
+
+    /* ── MAIN ────────────────────────────────────────────── */
+    main { max-width: 640px; margin: 0 auto; padding: 14px 14px 90px; }
+
+    .section-label {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--ink-light); opacity: 0.55;
+      margin: 18px 4px 9px;
+    }
+
+    .toast {
+      background: var(--help-bg); border: 1.5px solid var(--sage);
+      border-radius: 10px; padding: 11px 15px;
+      font-size: 13.5px; color: var(--sage-dark); font-weight: 500;
+      margin-bottom: 12px; display: none; animation: fadeIn 0.2s ease;
+    }
+    .toast.show { display: block; }
+    .toast.error { background: var(--give-bg); border-color: var(--terracotta); color: var(--terracotta); }
+
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── POST CARD ───────────────────────────────────────── */
+    .post-card {
+      background: var(--warm-white);
+      border-radius: var(--radius); padding: 13px 15px; margin-bottom: 9px;
+      border: 1px solid rgba(42,31,20,0.07);
+      box-shadow: 0 1px 5px rgba(42,31,20,0.06);
+      display: flex; gap: 11px; align-items: flex-start;
+      animation: cardIn 0.22s ease;
+      transition: transform 0.14s, box-shadow 0.14s;
+    }
+    .post-card:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(42,31,20,0.1); }
+    .post-card.expired { opacity: 0.55; }
+    .post-card.expired .card-title,
+    .post-card.expired .card-desc,
+    .post-card.expired .slot-pill,
+    .post-card.expired .fcfs-label { pointer-events: none; }
+
+    @keyframes cardIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    .type-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 6px;
+    }
+    .type-dot.give { background: var(--give-color); }
+    .type-dot.help { background: var(--help-color); }
+    .type-dot.have { background: var(--have-color); }
+
+    .card-body { flex: 1; min-width: 0; }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15.5px; font-weight: 600; color: var(--ink); line-height: 1.3;
+    }
+    .type-badge {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 3px 8px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+    }
+    .type-badge.give { background: var(--give-bg); color: var(--give-color); }
+    .type-badge.help { background: var(--help-bg); color: var(--help-color); }
+    .type-badge.have { background: var(--have-bg); color: var(--have-color); }
+
+    .card-meta {
+      font-size: 11.5px; color: var(--ink-light); opacity: 0.65;
+      margin-bottom: 6px; display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .card-desc { font-size: 13.5px; color: var(--ink-light); line-height: 1.55; margin-bottom: 9px; }
+
+    .slots-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .slot-pill {
+      background: var(--sand); border: 1.5px solid var(--sand-dark);
+      border-radius: 8px; padding: 4px 9px;
+      font-size: 12px; font-weight: 500; color: var(--ink-light);
+      cursor: pointer; transition: all 0.14s;
+    }
+    .slot-pill:hover { background: var(--prickle); border-color: var(--prickle); color: white; }
+    .slot-pill.claimed {
+      background: var(--sand-mid); border-color: var(--sand-dark);
+      color: var(--ink-light); opacity: 0.38; cursor: not-allowed; text-decoration: line-through;
+    }
+    .fcfs-label { font-size: 12px; color: var(--sage-dark); font-weight: 600; }
+
+    .card-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .btn-claim {
+      background: var(--prickle); color: white; border: none;
+      border-radius: 8px; padding: 7px 14px;
+      font-family: 'Karla', sans-serif; font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: background 0.14s;
+    }
+    .btn-claim:hover { background: var(--prickle-dark); }
+    .btn-claim.help-type { background: var(--help-color); }
+    .btn-claim.help-type:hover { background: var(--sage-dark); }
+    .btn-report {
+      background: transparent; color: var(--ink-light); border: 1.5px solid var(--sand-dark);
+      border-radius: 8px; padding: 6px 11px;
+      font-family: 'Karla', sans-serif; font-weight: 500; font-size: 12px;
+      cursor: pointer; opacity: 0.55; transition: opacity 0.14s;
+    }
+    .btn-report:hover { opacity: 1; }
+    .btn-repost {
+      background: var(--give-bg); color: var(--give-color);
+      border: 1.5px solid var(--terracotta); border-radius: 8px; padding: 6px 12px;
+      font-family: 'Karla', sans-serif; font-weight: 600; font-size: 12px;
+      cursor: pointer; transition: background 0.14s;
+    }
+    .btn-repost:hover { background: var(--terracotta); color: white; }
+    .expired-label {
+      font-size: 11px; font-weight: 600; color: var(--ink-light); opacity: 0.5;
+      text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 0 0;
+    }
+
+    /* ── ABOUT BANNER ────────────────────────────────────── */
+    .about-banner {
+      background: var(--prickle); border-radius: var(--radius);
+      margin-bottom: 14px; overflow: hidden;
+      animation: cardIn 0.3s ease;
+    }
+    .about-inner {
+      padding: 14px 15px; display: flex; gap: 10px; align-items: flex-start;
+    }
+    .about-text { flex: 1; }
+    .about-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px; font-weight: 600; color: var(--cream);
+      margin-bottom: 5px;
+    }
+    .about-body {
+      font-size: 13px; color: var(--cream); opacity: 0.85; line-height: 1.6;
+      margin-bottom: 9px;
+    }
+    .about-map-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 8px; padding: 5px 11px;
+      font-family: 'Karla', sans-serif; font-size: 12.5px; font-weight: 600;
+      color: var(--cream); cursor: pointer; transition: background 0.14s;
+    }
+    .about-map-btn:hover { background: rgba(255,255,255,0.25); }
+    .about-close {
+      background: rgba(255,255,255,0.1); border: none; border-radius: 50%;
+      width: 26px; height: 26px; color: var(--cream); font-size: 11px;
+      cursor: pointer; flex-shrink: 0; transition: background 0.14s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .about-close:hover { background: rgba(255,255,255,0.25); }
+
+    .quadrant-map {
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding: 12px 15px 14px;
+    }
+    .map-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 3px; margin-bottom: 8px;
+      border: 2px solid rgba(255,255,255,0.2); border-radius: 8px;
+      overflow: hidden; height: 100px; position: relative;
+    }
+    .map-cell {
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.08);
+    }
+    .map-cell.nw { border-right: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .map-cell.ne { border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .map-cell.sw { border-right: 1px solid rgba(255,255,255,0.2); }
+    .map-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.7);
+    }
+    .map-note {
+      font-size: 11.5px; color: var(--cream); opacity: 0.65; line-height: 1.5;
+    }
+
+    /* ── ABOUT BANNER ────────────────────────────────────── */
+    .empty {
+      text-align: center; padding: 44px 20px;
+      color: var(--ink-light); opacity: 0.45;
+    }
+    .empty .empty-icon { font-size: 38px; margin-bottom: 10px; }
+    .empty p { font-size: 14px; line-height: 1.6; }
+
+    /* ── MODAL BASE ──────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(42,31,20,0.52);
+      z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .sheet {
+      background: var(--warm-white); border-radius: 20px 20px 0 0;
+      padding: 22px 20px 44px; width: 100%; max-width: 640px;
+      transform: translateY(16px); transition: transform 0.24s ease;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .overlay.open .sheet { transform: translateY(0); }
+    .drag-handle {
+      width: 34px; height: 4px; background: var(--sand-dark);
+      border-radius: 2px; margin: 0 auto 20px;
+    }
+    .sheet h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 19px; color: var(--ink); margin-bottom: 16px;
+    }
+
+    /* ── FORM ELEMENTS ───────────────────────────────────── */
+    .fg { margin-bottom: 13px; }
+    .fg label {
+      display: block; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-light); margin-bottom: 6px;
+    }
+    .fg input, .fg textarea, .fg select {
+      width: 100%; background: var(--sand); border: 1.5px solid var(--sand-dark);
+      border-radius: 10px; padding: 10px 12px;
+      font-family: 'Karla', sans-serif; font-size: 15px; color: var(--ink);
+      outline: none; transition: border-color 0.14s; -webkit-appearance: none;
+    }
+    .fg input:focus, .fg textarea:focus, .fg select:focus { border-color: var(--sage); }
+    .fg textarea { resize: vertical; min-height: 72px; }
+    .fg .hint { font-size: 11.5px; color: var(--ink-light); opacity: 0.6; margin-top: 4px; }
+
+    .type-toggle { display: flex; gap: 7px; }
+    .type-btn {
+      flex: 1; padding: 9px 6px; border-radius: 10px;
+      border: 2px solid var(--sand-dark); background: transparent;
+      font-family: 'Karla', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.14s; color: var(--ink-light);
+      text-align: center;
+    }
+    .type-btn.active.give { background: var(--give-bg); border-color: var(--give-color); color: var(--give-color); }
+    .type-btn.active.help { background: var(--help-bg); border-color: var(--help-color); color: var(--help-color); }
+    .type-btn.active.have { background: var(--have-bg); border-color: var(--have-color); color: var(--have-color); }
+
+    .avail-toggle { display: flex; gap: 7px; }
+    .avail-btn {
+      flex: 1; padding: 9px 6px; border-radius: 10px;
+      border: 2px solid var(--sand-dark); background: transparent;
+      font-family: 'Karla', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.14s; color: var(--ink-light); text-align: center;
+    }
+    .avail-btn.active { background: var(--prickle); border-color: var(--prickle); color: white; }
+
+    /* slot builder mini */
+    .slot-builder { margin-top: 10px; }
+    .slot-row { display: flex; gap: 7px; align-items: flex-end; }
+    .slot-row .fg { flex: 1; margin-bottom: 0; }
+    .btn-add-slot {
+      background: var(--terracotta); color: white; border: none;
+      border-radius: 10px; padding: 10px 14px; height: 41px;
+      font-family: 'Karla', sans-serif; font-weight: 700; font-size: 18px;
+      cursor: pointer; flex-shrink: 0; transition: background 0.14s;
+    }
+    .btn-add-slot:hover { background: var(--terracotta-light); }
+    .added-slots { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .added-chip {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--sage-dark); color: white;
+      border-radius: 18px; padding: 5px 9px 5px 11px;
+      font-size: 12.5px; font-weight: 500; animation: popIn 0.18s ease;
+    }
+    @keyframes popIn { from { transform:scale(0.82); opacity:0; } to { transform:scale(1); opacity:1; } }
+    .chip-remove {
+      background: rgba(255,255,255,0.22); border: none; border-radius: 50%;
+      width: 17px; height: 17px; cursor: pointer; color: white;
+      font-size: 10px; display: flex; align-items: center; justify-content: center;
+      transition: background 0.14s; padding: 0;
+    }
+    .chip-remove:hover { background: rgba(255,255,255,0.42); }
+    .preset-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .preset-p {
+      background: var(--sand); border: 1.5px solid var(--sand-dark);
+      border-radius: 18px; padding: 5px 11px;
+      font-family: 'Karla', sans-serif; font-size: 12.5px; font-weight: 500;
+      color: var(--ink-light); cursor: pointer; transition: all 0.14s; white-space: nowrap;
+    }
+    .preset-p:hover { background: var(--prickle); border-color: var(--prickle); color: white; }
+    .dur-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .dur-b {
+      background: var(--sand); border: 1.5px solid var(--sand-dark);
+      border-radius: 8px; padding: 5px 11px;
+      font-family: 'Karla', sans-serif; font-size: 12.5px; font-weight: 500;
+      color: var(--ink-light); cursor: pointer; transition: all 0.14s;
+    }
+    .dur-b.active { background: var(--prickle); border-color: var(--prickle); color: white; }
+
+    .btn-submit {
+      width: 100%; background: var(--prickle); color: white; border: none;
+      border-radius: 12px; padding: 13px;
+      font-family: 'Karla', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 6px; transition: background 0.14s;
+    }
+    .btn-submit:hover { background: var(--prickle-dark); }
+    .btn-submit:disabled { opacity: 0.38; cursor: not-allowed; }
+    .btn-cancel {
+      width: 100%; background: transparent; border: none; color: var(--ink-light);
+      font-family: 'Karla', sans-serif; font-size: 13.5px; padding: 10px;
+      cursor: pointer; opacity: 0.55; margin-top: 2px;
+    }
+
+    .divider-or {
+      text-align: center; font-size: 10.5px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink-light); opacity: 0.38; margin: 12px 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .divider-or::before, .divider-or::after {
+      content: ''; flex: 1; height: 1px; background: var(--sand-dark);
+    }
+    .form-divider { height: 1px; background: var(--sand-mid); margin: 14px 0; }
+
+    /* claim modal */
+    .claim-post-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 21px; color: var(--ink); margin-bottom: 4px;
+    }
+    .claim-post-meta { font-size: 12.5px; color: var(--ink-light); opacity: 0.65; margin-bottom: 14px; }
+    .claim-slots-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .claim-slot {
+      padding: 8px 14px; border-radius: 10px;
+      border: 2px solid var(--sand-dark); background: var(--sand);
+      font-family: 'Karla', sans-serif; font-size: 13.5px; font-weight: 500;
+      cursor: pointer; transition: all 0.14s; color: var(--ink-light);
+    }
+    .claim-slot:hover, .claim-slot.sel {
+      background: var(--prickle); border-color: var(--prickle); color: white;
+    }
+    .claim-slot.taken { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+    /* admin panel */
+    .admin-card {
+      background: var(--warm-white); border-radius: var(--radius);
+      padding: 13px 15px; margin-bottom: 9px;
+      border: 1.5px solid var(--sand-dark);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .admin-card .ac-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .admin-card .ac-meta { font-size: 12px; color: var(--ink-light); opacity: 0.65; }
+    .btn-delete {
+      background: var(--give-bg); color: var(--terracotta);
+      border: 1.5px solid var(--terracotta); border-radius: 8px;
+      padding: 6px 12px; font-family: 'Karla', sans-serif;
+      font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+      transition: all 0.14s;
+    }
+    .btn-delete:hover { background: var(--terracotta); color: white; }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾'; position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%); color: var(--ink-light);
+      pointer-events: none; font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="cactus">🌵</span>
+      <div class="header-text">
+        <span class="eyebrow">Garden District</span>
+        <h1>The Porch Exchange</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-admin" onclick="openAdmin()">⚙</button>
+      <button class="btn-post" onclick="openPost()">+ Post</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ FILTER BAR ════════════════════════════════════════ -->
+<div class="filter-bar">
+  <div class="filter-inner" id="filterBar">
+    <button class="chip active" onclick="setFilter(this,'all')">All</button>
+    <button class="chip" onclick="setFilter(this,'give')">🍅 Giving</button>
+    <button class="chip" onclick="setFilter(this,'help')">🤝 Help</button>
+    <button class="chip" onclick="setFilter(this,'have')">✨ Offering</button>
+    <button class="chip" onclick="setFilter(this,'nw')">NW</button>
+    <button class="chip" onclick="setFilter(this,'ne')">NE</button>
+    <button class="chip" onclick="setFilter(this,'sw')">SW</button>
+    <button class="chip" onclick="setFilter(this,'se')">SE</button>
+    <button class="chip" onclick="setFilter(this,'unknown')">📍 Not sure</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════ -->
+<main>
+  <div class="toast" id="toast"></div>
+
+  <!-- ABOUT BANNER -->
+  <div class="about-banner" id="aboutBanner">
+    <div class="about-inner">
+      <div class="about-text">
+        <div class="about-title">Welcome to The Porch Exchange 🌵</div>
+        <div class="about-body">A free sharing board for Garden District neighbors. Post extra food, stuff you're giving away, skills you're offering, or tasks you need a hand with. No accounts. No money. Just neighbors helping neighbors.</div>
+        <button class="about-map-btn" onclick="toggleMap()">📍 Show quadrant map</button>
+      </div>
+      <button class="about-close" onclick="closeAbout()" title="Got it">✕</button>
+    </div>
+    <div class="quadrant-map" id="quadrantMap" style="display:none;">
+      <div class="map-grid">
+        <div class="map-cell nw"><span class="map-label">NW</span></div>
+        <div class="map-cell ne"><span class="map-label">NE</span></div>
+        <div class="map-divider-v"></div>
+        <div class="map-cell sw"><span class="map-label">SW</span></div>
+        <div class="map-cell se"><span class="map-label">SE</span></div>
+      </div>
+      <div class="map-note">Dividing streets TBD — <a href="https://gdna.weebly.com" target="_blank" style="color:var(--sage-dark);">see GDNA map</a> · Not sure? Just pick "Not sure" when posting.</div>
+    </div>
+  </div>
+
+  <div class="section-label">Right Now</div>
+  <div id="postList"><div class="empty"><div class="empty-icon">🌵</div><p>Loading…</p></div></div>
+</main>
+
+<!-- ═══ POST MODAL ════════════════════════════════════════ -->
+<div class="overlay" id="postOverlay" onclick="maybeClose(event,'postOverlay')">
+  <div class="sheet">
+    <div class="drag-handle"></div>
+    <h2>Post to the Exchange</h2>
+
+    <div class="fg">
+      <label>What kind of post?</label>
+      <div class="type-toggle">
+        <button class="type-btn give active" id="tbGive" onclick="setType('give')">🍅 Giving</button>
+        <button class="type-btn help" id="tbHelp" onclick="setType('help')">🤝 Need Help</button>
+        <button class="type-btn have" id="tbHave" onclick="setType('have')">✨ Offering</button>
+      </div>
+      <div class="hint" id="typeHint" style="margin-top:6px;">Food, produce, or stuff you want to give away</div>
+    </div>
+
+    <div class="fg">
+      <label>What is it?</label>
+      <input type="text" id="pTitle" placeholder="e.g. Loquats from my tree, Extra enchiladas…">
+    </div>
+    <div class="fg">
+      <label>More detail <span style="opacity:.5;font-weight:400;text-transform:none;">(optional)</span></label>
+      <textarea id="pDesc" placeholder="Quantity, allergies, what the task involves, skill details…"></textarea>
+    </div>
+    <div class="fg">
+      <label>Your first name</label>
+      <input type="text" id="pName" placeholder="How neighbors will know you">
+    </div>
+    <div class="fg">
+      <label>Your quadrant</label>
+      <div class="select-wrap">
+        <select id="pQuadrant">
+          <option value="unknown" selected>Not sure — that's okay</option>
+          <option value="nw">NW — North of [E-W street], West of [N-S street]</option>
+          <option value="ne">NE — North of [E-W street], East of [N-S street]</option>
+          <option value="sw">SW — South of [E-W street], West of [N-S street]</option>
+          <option value="se">SE — South of [E-W street], East of [N-S street]</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Your email <span style="opacity:.5;font-weight:400;text-transform:none;">(for claim notifications — not shown publicly)</span></label>
+      <input type="email" id="pEmail" placeholder="you@example.com">
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- PICKUP / AVAILABILITY -->
+    <div class="fg" id="availSection">
+      <label>Availability</label>
+      <div class="avail-toggle">
+        <button class="avail-btn active" id="avFcfs" onclick="setAvail('fcfs')">🟢 Come anytime</button>
+        <button class="avail-btn" id="avSlots" onclick="setAvail('slots')">🕐 Time slots</button>
+      </div>
+    </div>
+
+    <!-- FCFS expiry -->
+    <div class="fg" id="fcfsSection">
+      <label>Available until</label>
+      <div class="select-wrap">
+        <select id="pExpiry">
+          <option value="6">6 hours from now</option>
+          <option value="12">12 hours from now</option>
+          <option value="24">Tomorrow (24 hrs)</option>
+          <option value="48">2 days</option>
+          <option value="72" selected>3 days (default)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- SLOTS builder -->
+    <div id="slotsSection" style="display:none;">
+      <div class="fg">
+        <label>Quick add</label>
+        <div class="preset-row" id="presetRow"></div>
+        <div class="divider-or">or custom</div>
+        <div class="dur-row" id="durRow">
+          <button class="dur-b" onclick="setDur(this,30)">30 min</button>
+          <button class="dur-b active" onclick="setDur(this,60)">1 hr</button>
+          <button class="dur-b" onclick="setDur(this,90)">1.5 hrs</button>
+          <button class="dur-b" onclick="setDur(this,120)">2 hrs</button>
+          <button class="dur-b" onclick="setDur(this,0)">Open</button>
+        </div>
+        <div class="slot-row">
+          <div class="fg" style="flex:1;margin-bottom:0;">
+            <label>Day</label>
+            <div class="select-wrap">
+              <select id="slotDay">
+                <option value="today">Today</option>
+                <option value="tomorrow">Tomorrow</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg" style="flex:1;margin-bottom:0;">
+            <label>From</label>
+            <div class="select-wrap"><select id="slotFrom"></select></div>
+          </div>
+          <div class="fg" style="flex:1;margin-bottom:0;">
+            <label>Until</label>
+            <div class="select-wrap"><select id="slotUntil"></select></div>
+          </div>
+          <button class="btn-add-slot" onclick="addSlot()">+</button>
+        </div>
+        <div class="added-slots" id="addedSlots"></div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- PICKUP INSTRUCTIONS -->
+    <div class="fg">
+      <label>Your address <span style="opacity:.5;font-weight:400;text-transform:none;">(revealed only when someone claims)</span></label>
+      <input type="text" id="pAddress" placeholder="123 Prickly Pear Lane">
+    </div>
+    <div class="fg">
+      <label>Pickup notes <span style="opacity:.5;font-weight:400;text-transform:none;">(optional)</span></label>
+      <input type="text" id="pNotes" placeholder="Left at carport door, beware of chickens…">
+    </div>
+
+    <button class="btn-submit" onclick="submitPost()">Post it</button>
+    <button class="btn-cancel" onclick="closeOverlay('postOverlay')">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ CLAIM MODAL ═══════════════════════════════════════ -->
+<div class="overlay" id="claimOverlay" onclick="maybeClose(event,'claimOverlay')">
+  <div class="sheet">
+    <div class="drag-handle"></div>
+    <div class="claim-post-title" id="cTitle"></div>
+    <div class="claim-post-meta" id="cMeta"></div>
+
+    <div id="cSlotsSection">
+      <div class="fg" style="margin-bottom:6px;"><label>Choose a time slot</label></div>
+      <div class="claim-slots-grid" id="cSlots"></div>
+    </div>
+    <div id="cFcfsSection" style="display:none;">
+      <p style="font-size:13.5px;color:var(--ink-light);line-height:1.55;margin-bottom:14px;">
+        First come, first served. Once you claim, you'll get the poster's address and pickup notes.
+      </p>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="fg">
+      <label>Your first name</label>
+      <input type="text" id="cName" placeholder="So they know who's coming">
+    </div>
+    <div class="fg">
+      <label>Your contact</label>
+      <input type="text" id="cContact" placeholder="Phone or email — shared only with the poster">
+    </div>
+
+    <button class="btn-submit" id="cSubmitBtn" onclick="submitClaim()">Claim it</button>
+    <button class="btn-cancel" onclick="closeOverlay('claimOverlay')">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ CONFIRM MODAL (post-claim) ════════════════════════ -->
+<div class="overlay" id="confirmOverlay" onclick="maybeClose(event,'confirmOverlay')">
+  <div class="sheet">
+    <div class="drag-handle"></div>
+    <h2>You're all set 🌵</h2>
+    <p style="font-size:14.5px;color:var(--ink-light);line-height:1.65;margin-bottom:18px;" id="confirmMsg"></p>
+    <div style="background:var(--sand);border-radius:10px;padding:14px 16px;margin-bottom:18px;" id="confirmDetails"></div>
+    <button class="btn-submit" onclick="closeOverlay('confirmOverlay')">Got it</button>
+  </div>
+</div>
+
+<!-- ═══ ADMIN MODAL ═══════════════════════════════════════ -->
+<div class="overlay" id="adminOverlay" onclick="maybeClose(event,'adminOverlay')">
+  <div class="sheet">
+    <div class="drag-handle"></div>
+    <h2>⚙ Admin</h2>
+    <div id="adminLoginSection">
+      <div class="fg">
+        <label>Admin password</label>
+        <input type="password" id="adminPw" placeholder="Enter password">
+      </div>
+      <button class="btn-submit" onclick="checkAdmin()">Sign in</button>
+    </div>
+    <div id="adminPanel" style="display:none;">
+      <p style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">All active posts. Delete any that violate community guidelines.</p>
+      <div id="adminList"></div>
+      <div class="form-divider"></div>
+      <div class="fg">
+        <label>Add admin email</label>
+        <input type="email" id="newAdminEmail" placeholder="neighbor@example.com">
+      </div>
+      <button class="btn-submit" onclick="addAdmin()" style="background:var(--sage-dark);">Add Admin</button>
+      <button class="btn-cancel" onclick="closeOverlay('adminOverlay')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── ABOUT BANNER ─────────────────────────────────────────────────────────────
+function closeAbout() {
+  const b = document.getElementById('aboutBanner');
+  if (b) b.style.display = 'none';
+}
+function toggleMap() {
+  const m = document.getElementById('quadrantMap');
+  const btn = document.querySelector('.about-map-btn');
+  if (!m) return;
+  const showing = m.style.display !== 'none';
+  m.style.display = showing ? 'none' : 'block';
+  btn.textContent = showing ? '📍 Show quadrant map' : '📍 Hide map';
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let posts = {};
+let activeFilter = 'all';
+let activeType = 'give';
+let activeAvail = 'fcfs';
+let activeDur = 60;
+let builtSlots = [];
+let claimingId = null;
+let selectedSlotIdx = null;
+let isAdmin = false;
+
+// simple admin passwords stored in Firebase under /admins
+// default password is "porchexchange" — change in Firebase console
+const DEFAULT_ADMIN_PW = "porchexchange";
+
+// ─── FIREBASE INIT ────────────────────────────────────────────────────────────
+function waitForFirebase(cb) {
+  if (window._firebaseReady) { cb(); return; }
+  window.addEventListener('firebaseReady', cb, { once: true });
+}
+
+waitForFirebase(() => {
+  const db = window._db;
+  const dbRef = window._ref;
+  window._onValue(dbRef(db, 'posts'), snap => {
+    posts = snap.val() || {};
+    renderPosts();
+  });
+});
+
+// ─── EXPIRY CHECK ─────────────────────────────────────────────────────────────
+function isExpired(post) {
+  const now = Date.now();
+  if (post.availability === 'fcfs') {
+    return now > post.expiresAt;
+  }
+  if (post.availability === 'slots' && post.slots) {
+    const allPast = post.slots.every(s => now > s.endsAt);
+    return allPast;
+  }
+  return false;
+}
+
+function allSlotsClaimed(post) {
+  if (!post.slots) return false;
+  return post.slots.every(s => s.claimed);
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderPosts() {
+  const list = document.getElementById('postList');
+  let arr = Object.entries(posts).map(([id, p]) => ({ ...p, id }));
+
+  // filter
+  if (activeFilter === 'give') arr = arr.filter(p => p.type === 'give');
+  else if (activeFilter === 'help') arr = arr.filter(p => p.type === 'help');
+  else if (activeFilter === 'have') arr = arr.filter(p => p.type === 'have');
+  else if (['nw','ne','sw','se','unknown'].includes(activeFilter)) arr = arr.filter(p => p.quadrant === activeFilter);
+
+  // sort: active first, then expired
+  arr.sort((a,b) => {
+    const ae = isExpired(a), be = isExpired(b);
+    if (ae !== be) return ae ? 1 : -1;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  if (arr.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🌵</div><p>Nothing posted yet.<br>Be the first.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = arr.map(post => {
+    const expired = isExpired(post);
+    const fullyFull = post.availability === 'slots' && allSlotsClaimed(post);
+    const typeLabel = { give:'Giving', help:'Help Needed', have:'Offering' }[post.type] || post.type;
+    const typeEmoji = { give:'🍅', help:'🤝', have:'✨' }[post.type] || '';
+    const timeAgo = formatTimeAgo(post.createdAt);
+
+    let availHtml = '';
+    if (post.availability === 'slots' && post.slots) {
+      availHtml = `<div class="slots-row">
+        ${post.slots.map(s => `<div class="slot-pill ${s.claimed?'claimed':''}">${s.label}</div>`).join('')}
+      </div>`;
+    } else {
+      availHtml = `<div class="fcfs-label">🟢 Available — come anytime</div>`;
+    }
+
+    let actionsHtml = '';
+    if (expired || fullyFull) {
+      actionsHtml = `
+        <div class="expired-label">${fullyFull ? 'All slots claimed' : 'Expired'}</div>
+        <button class="btn-repost" onclick="repost('${post.id}')">↺ Repost</button>
+      `;
+    } else {
+      const claimLabel = post.type === 'help' ? '🤝 Offer to help' : 'Claim';
+      const claimClass = post.type === 'help' ? 'help-type' : '';
+      actionsHtml = `
+        <button class="btn-claim ${claimClass}" onclick="openClaim('${post.id}')">${claimLabel}</button>
+        <button class="btn-report" onclick="reportPost('${post.id}')">Report</button>
+      `;
+    }
+
+    return `
+      <div class="post-card ${expired||fullyFull?'expired':''}">
+        <div class="type-dot ${post.type}"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-title">${esc(post.title)}</div>
+            <span class="type-badge ${post.type}">${typeEmoji} ${typeLabel}</span>
+          </div>
+          <div class="card-meta">
+            <span>${esc(post.name)} · ${post.quadrant === 'unknown' ? '📍 Garden District' : (post.quadrant||'').toUpperCase() + ' quadrant'}</span>
+            <span>${timeAgo}</span>
+          </div>
+          ${post.desc ? `<div class="card-desc">${esc(post.desc)}</div>` : ''}
+          ${availHtml}
+          <div class="card-actions">${actionsHtml}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── FILTER ───────────────────────────────────────────────────────────────────
+function setFilter(el, val) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = val;
+  renderPosts();
+}
+
+// ─── POST MODAL ───────────────────────────────────────────────────────────────
+function openPost() {
+  resetPostForm();
+  buildPresets();
+  populateSlotTimes();
+  openOverlay('postOverlay');
+}
+
+function setType(t) {
+  activeType = t;
+  ['Give','Help','Have'].forEach(x => {
+    const btn = document.getElementById('tb'+x);
+    btn.classList.toggle('active', t === x.toLowerCase());
+  });
+  const hints = {
+    give: 'Food, produce, or stuff you want to give away',
+    help: 'A task you need a neighbor\'s hand with',
+    have: 'A skill, tool, or resource you\'re offering'
+  };
+  document.getElementById('typeHint').textContent = hints[t];
+  // help posts always get slot scheduling
+  if (t === 'help') { setAvail('slots'); document.getElementById('availSection').style.opacity = '0.5'; }
+  else { document.getElementById('availSection').style.opacity = '1'; }
+}
+
+function setAvail(a) {
+  activeAvail = a;
+  document.getElementById('avFcfs').classList.toggle('active', a === 'fcfs');
+  document.getElementById('avSlots').classList.toggle('active', a === 'slots');
+  document.getElementById('fcfsSection').style.display = a === 'fcfs' ? 'block' : 'none';
+  document.getElementById('slotsSection').style.display = a === 'slots' ? 'block' : 'none';
+}
+
+function setDur(btn, mins) {
+  activeDur = mins;
+  document.querySelectorAll('.dur-b').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateSlotUntil();
+}
+
+function buildPresets() {
+  const now = new Date();
+  const h = now.getHours();
+  const presets = [
+    { label:'This morning', day:'today', from:8, until:12 },
+    { label:'This afternoon', day:'today', from:12, until:17 },
+    { label:'This evening', day:'today', from:17, until:20 },
+    { label:'Tomorrow morning', day:'tomorrow', from:8, until:12 },
+    { label:'Tomorrow afternoon', day:'tomorrow', from:12, until:17 },
+  ].filter(p => !(p.day === 'today' && p.until <= h));
+
+  document.getElementById('presetRow').innerHTML = presets.slice(0,4).map(p =>
+    `<button class="preset-p" onclick='quickSlot(${JSON.stringify(p)})'>${p.label}</button>`
+  ).join('');
+}
+
+function quickSlot(p) {
+  const dayLabel = p.day === 'tomorrow' ? 'Tomorrow' : 'Today';
+  const label = `${dayLabel} ${fmtHr(p.from)}–${fmtHr(p.until)}`;
+  pushSlot(label);
+}
+
+function populateSlotTimes() {
+  const from = document.getElementById('slotFrom');
+  const until = document.getElementById('slotUntil');
+  from.innerHTML = ''; until.innerHTML = '';
+  for (let h = 6; h <= 22; h++) {
+    from.innerHTML += `<option value="${h}">${fmtHrFull(h)}</option>`;
+    until.innerHTML += `<option value="${h+1}">${fmtHrFull(h+1)}</option>`;
+  }
+  const nowH = new Date().getHours();
+  from.value = Math.min(Math.max(nowH+1, 6), 22);
+  updateSlotUntil();
+}
+
+function updateSlotUntil() {
+  const f = parseInt(document.getElementById('slotFrom').value);
+  if (activeDur === 0) return;
+  const u = f + activeDur/60;
+  if (u <= 23) document.getElementById('slotUntil').value = u;
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const sf = document.getElementById('slotFrom');
+  if (sf) sf.addEventListener('change', updateSlotUntil);
+});
+
+function addSlot() {
+  const day = document.getElementById('slotDay').value;
+  const from = parseInt(document.getElementById('slotFrom').value);
+  const until = parseInt(document.getElementById('slotUntil').value);
+  if (activeDur !== 0 && until <= from) { showToast('End time must be after start.', true); return; }
+  const dayLabel = day === 'tomorrow' ? 'Tomorrow' : 'Today';
+  const label = activeDur === 0
+    ? `${dayLabel} from ${fmtHr(from)}`
+    : `${dayLabel} ${fmtHr(from)}–${fmtHr(until)}`;
+  pushSlot(label, from, until, day);
+}
+
+function pushSlot(label, from, until, day) {
+  if (builtSlots.find(s => s.label === label)) { showToast('Already added that slot.', true); return; }
+  // compute endsAt timestamp
+  const d = new Date();
+  if (day === 'tomorrow') d.setDate(d.getDate()+1);
+  d.setHours(until || 23, 59, 0, 0);
+  builtSlots.push({ label, claimed: false, endsAt: d.getTime() });
+  renderBuiltSlots();
+}
+
+function removeBuiltSlot(i) {
+  builtSlots.splice(i, 1);
+  renderBuiltSlots();
+}
+
+function renderBuiltSlots() {
+  document.getElementById('addedSlots').innerHTML = builtSlots.map((s,i) => `
+    <div class="added-chip">
+      ${esc(s.label)}
+      <button class="chip-remove" onclick="removeBuiltSlot(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+async function submitPost() {
+  const title = document.getElementById('pTitle').value.trim();
+  const name  = document.getElementById('pName').value.trim();
+  const email = document.getElementById('pEmail').value.trim();
+  const addr  = document.getElementById('pAddress').value.trim();
+  if (!title) { showToast('Add a title for your post.', true); return; }
+  if (!name)  { showToast('Add your first name.', true); return; }
+  if (!addr)  { showToast('Add your address so neighbors know where to come.', true); return; }
+  if (activeAvail === 'slots' && builtSlots.length === 0) { showToast('Add at least one time slot.', true); return; }
+
+  const now = Date.now();
+  const expiryHrs = parseInt(document.getElementById('pExpiry').value) || 72;
+
+  const post = {
+    type: activeType,
+    title,
+    desc: document.getElementById('pDesc').value.trim(),
+    name,
+    email,
+    quadrant: document.getElementById('pQuadrant').value,
+    availability: activeAvail,
+    slots: activeAvail === 'slots' ? builtSlots : null,
+    expiresAt: activeAvail === 'fcfs' ? now + expiryHrs*3600*1000 : null,
+    address: addr,
+    notes: document.getElementById('pNotes').value.trim(),
+    createdAt: now,
+  };
+
+  try {
+    await window._push(window._ref(window._db, 'posts'), post);
+    closeOverlay('postOverlay');
+    showToast(`Posted! Neighbors can see it now, ${name}.`);
+  } catch(e) {
+    showToast('Could not post — check Firebase config.', true);
+    console.error(e);
+  }
+}
+
+function resetPostForm() {
+  ['pTitle','pDesc','pName','pEmail','pAddress','pNotes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  builtSlots = [];
+  renderBuiltSlots();
+  setType('give');
+  setAvail('fcfs');
+  activeDur = 60;
+  document.querySelectorAll('.dur-b').forEach((b,i) => b.classList.toggle('active', i===1));
+}
+
+// ─── REPOST ───────────────────────────────────────────────────────────────────
+function repost(id) {
+  const post = posts[id];
+  if (!post) return;
+  openPost();
+  setTimeout(() => {
+    document.getElementById('pTitle').value = post.title || '';
+    document.getElementById('pDesc').value = post.desc || '';
+    document.getElementById('pName').value = post.name || '';
+    document.getElementById('pEmail').value = post.email || '';
+    document.getElementById('pAddress').value = post.address || '';
+    document.getElementById('pNotes').value = post.notes || '';
+    document.getElementById('pQuadrant').value = post.quadrant || 'sw';
+    setType(post.type || 'give');
+    setAvail('fcfs'); // reset slots — they'll set new ones
+    showToast('Form pre-filled from your previous post. Update the slots and repost!');
+  }, 100);
+}
+
+// ─── CLAIM MODAL ──────────────────────────────────────────────────────────────
+function openClaim(id) {
+  const post = posts[id];
+  if (!post) return;
+  claimingId = id;
+  selectedSlotIdx = null;
+
+  document.getElementById('cTitle').textContent = post.title;
+  document.getElementById('cMeta').textContent = `${post.name} · ${(post.quadrant||'').toUpperCase()} quadrant · ${formatTimeAgo(post.createdAt)}`;
+  document.getElementById('cName').value = '';
+  document.getElementById('cContact').value = '';
+
+  const helpMsg = post.type === 'help'
+    ? "You'll both get each other's contact info after claiming — you can sort out the details directly."
+    : null;
+
+  if (post.availability === 'slots') {
+    document.getElementById('cSlotsSection').style.display = 'block';
+    document.getElementById('cFcfsSection').style.display = helpMsg ? 'block' : 'none';
+    if (helpMsg) document.getElementById('cFcfsSection').querySelector('p').textContent = helpMsg;
+    document.getElementById('cSlots').innerHTML = (post.slots||[]).map((s,i) => `
+      <div class="claim-slot ${s.claimed?'taken':''}" onclick="${s.claimed?'':'selectSlot('+i+')'}" id="cs_${i}">
+        ${esc(s.label)}${s.claimed?' (taken)':''}
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('cSlotsSection').style.display = 'none';
+    document.getElementById('cFcfsSection').style.display = 'block';
+    if (helpMsg) document.getElementById('cFcfsSection').querySelector('p').textContent = helpMsg;
+  }
+
+  document.getElementById('cSubmitBtn').textContent = post.type === 'help' ? '🤝 Offer to help' : 'Claim it';
+  openOverlay('claimOverlay');
+}
+
+function selectSlot(i) {
+  selectedSlotIdx = i;
+  document.querySelectorAll('.claim-slot:not(.taken)').forEach(el => el.classList.remove('sel'));
+  const el = document.getElementById('cs_'+i);
+  if (el) el.classList.add('sel');
+}
+
+async function submitClaim() {
+  const post = posts[claimingId];
+  const name    = document.getElementById('cName').value.trim();
+  const contact = document.getElementById('cContact').value.trim();
+  if (!name)    { showToast("Add your name so the poster knows who's coming.", true); return; }
+  if (!contact) { showToast('Add a contact so you two can connect.', true); return; }
+  if (post.availability === 'slots' && selectedSlotIdx === null) {
+    showToast('Pick a time slot first.', true); return;
+  }
+
+  // Mark slot claimed
+  const updates = {};
+  if (post.availability === 'slots') {
+    updates[`posts/${claimingId}/slots/${selectedSlotIdx}/claimed`] = true;
+    updates[`posts/${claimingId}/slots/${selectedSlotIdx}/claimedBy`] = name;
+  }
+  try {
+    if (Object.keys(updates).length) await window._update(window._ref(window._db), updates);
+  } catch(e) { console.error(e); }
+
+  const slotLabel = post.availability === 'slots' ? post.slots[selectedSlotIdx].label : null;
+
+  // Send notification email to poster
+  if (post.email && window._RESEND_KEY && !window._RESEND_KEY.startsWith('YOUR_')) {
+    sendEmail(post.email, `Someone claimed your post on The Porch Exchange`,
+      `Hi ${post.name},\n\n${name} claimed your post "${post.title}"${slotLabel ? ` for the slot: ${slotLabel}` : ''}.\n\nTheir contact: ${contact}\n\nSee you on the porch!\n— The Porch Exchange`);
+  }
+
+  closeOverlay('claimOverlay');
+
+  // Show confirm with address reveal
+  const isHelp = post.type === 'help';
+  document.getElementById('confirmMsg').textContent = isHelp
+    ? `${post.name} will be expecting you. Here's how to reach them and where to go:`
+    : `Here's where to pick up your ${post.title}:`;
+
+  document.getElementById('confirmDetails').innerHTML = `
+    <div style="font-size:14px;line-height:1.8;color:var(--ink);">
+      <div><strong>📍 Address:</strong> ${esc(post.address)}</div>
+      ${post.notes ? `<div><strong>📝 Notes:</strong> ${esc(post.notes)}</div>` : ''}
+      ${slotLabel ? `<div><strong>🕐 Your slot:</strong> ${esc(slotLabel)}</div>` : ''}
+      ${isHelp && post.email ? `<div><strong>📧 Contact:</strong> ${esc(post.email)}</div>` : ''}
+    </div>
+  `;
+  openOverlay('confirmOverlay');
+}
+
+// ─── REPORT ───────────────────────────────────────────────────────────────────
+async function reportPost(id) {
+  const post = posts[id];
+  if (!post) return;
+  if (!confirm(`Report "${post.title}" to the admin?`)) return;
+  if (window._RESEND_KEY && !window._RESEND_KEY.startsWith('YOUR_')) {
+    sendEmail(window._ADMIN_EMAIL, `[Porch Exchange] Post reported`,
+      `Post reported by a neighbor.\n\nTitle: ${post.title}\nPosted by: ${post.name} (${post.quadrant})\nPost ID: ${id}\n\nPlease review and remove if necessary.`);
+  }
+  showToast('Report sent. An admin will review it shortly.');
+}
+
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+function openAdmin() { openOverlay('adminOverlay'); }
+
+async function checkAdmin() {
+  const pw = document.getElementById('adminPw').value;
+  // Check against Firebase /adminPasswords node
+  try {
+    const snap = await window._get(window._ref(window._db, 'adminPasswords'));
+    const stored = snap.val();
+    let valid = false;
+    if (stored) {
+      valid = Object.values(stored).includes(pw);
+    } else {
+      // First time — accept default
+      valid = pw === DEFAULT_ADMIN_PW;
+      if (valid) await window._update(window._ref(window._db), { 'adminPasswords/default': pw });
+    }
+    if (valid) {
+      isAdmin = true;
+      document.getElementById('adminLoginSection').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      renderAdminList();
+    } else {
+      showToast('Wrong password.', true);
+    }
+  } catch(e) {
+    showToast('Could not verify — check Firebase config.', true);
+  }
+}
+
+function renderAdminList() {
+  const arr = Object.entries(posts).map(([id,p]) => ({...p,id}))
+    .sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+  document.getElementById('adminList').innerHTML = arr.length === 0
+    ? '<p style="font-size:13px;color:var(--ink-light);opacity:.5;">No posts.</p>'
+    : arr.map(p => `
+      <div class="admin-card">
+        <div>
+          <div class="ac-title">${esc(p.title)}</div>
+          <div class="ac-meta">${p.name} · ${(p.quadrant||'').toUpperCase()} · ${formatTimeAgo(p.createdAt)}</div>
+        </div>
+        <button class="btn-delete" onclick="deletePost('${p.id}')">Delete</button>
+      </div>
+    `).join('');
+}
+
+async function deletePost(id) {
+  if (!confirm('Delete this post? This cannot be undone.')) return;
+  try {
+    await window._remove(window._ref(window._db, 'posts/'+id));
+    showToast('Post deleted.');
+    renderAdminList();
+  } catch(e) { showToast('Could not delete.', true); }
+}
+
+async function addAdmin() {
+  const email = document.getElementById('newAdminEmail').value.trim();
+  if (!email) return;
+  // For simplicity store a simple password based on their email domain
+  const pw = email.split('@')[0] + Math.floor(Math.random()*900+100);
+  try {
+    await window._push(window._ref(window._db, 'adminPasswords'), pw);
+    showToast(`Admin added. Their password: ${pw}`);
+    document.getElementById('newAdminEmail').value = '';
+  } catch(e) { showToast('Could not add admin.', true); }
+}
+
+// ─── EMAIL (RESEND) ───────────────────────────────────────────────────────────
+async function sendEmail(to, subject, text) {
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${window._RESEND_KEY}`
+      },
+      body: JSON.stringify({
+        from: 'Porch Exchange <noreply@porchexchange.com>',
+        to, subject,
+        text
+      })
+    });
+  } catch(e) { console.warn('Email failed:', e); }
+}
+
+// ─── OVERLAY HELPERS ──────────────────────────────────────────────────────────
+function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+function maybeClose(e, id) { if (e.target.id === id) closeOverlay(id); }
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = (isError ? '⚠ ' : '✓ ') + msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 5000);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtHr(h) {
+  if (h===0) return '12am'; if (h<12) return h+'am';
+  if (h===12) return '12pm'; return (h-12)+'pm';
+}
+function fmtHrFull(h) {
+  if (h===0) return '12:00 AM'; if (h<12) return h+':00 AM';
+  if (h===12) return '12:00 PM'; if (h>24) return '—';
+  return (h-12)+':00 PM';
+}
+
+function formatTimeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff/60000);
+  if (mins < 2) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs/24)}d ago`;
+}
+</script>
+</body>
+</html>
